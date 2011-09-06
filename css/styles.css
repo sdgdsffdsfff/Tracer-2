@@ -1,0 +1,48 @@
+body { margin-bottom:18px; font-family:'Droid Sans', arial, sans-serif; font-size:12px; background:url('../images/header-bg.png') repeat-x #ffffff; color:#6d6d6d; }
+ul { list-style-type:none; }
+a { text-decoration:none; color:inherit; }
+h2 { font-size:28px; font-weight:bold; }
+h3 { font-size:22px; margin:0; color:#5b8726;}
+h4, h5 { font-size:14px; font-weight:bold; }
+strong, b { font-weight:bold; }
+
+table { border:none; width:100%; text-align:left; border-collapse:collapse; }
+thead { background:#cdcdcd; font-size:14px; font-weight:bold; }
+tbody { }
+th, td { padding:2px; }
+th { text-align:center; }
+th.options, td.options { width:66px; text-align:center; }
+
+.odd { background:#f0f0f0; }
+.even { background:#ffffff; }
+
+.error { color:#ff0000; font-weight:bold; }
+
+form legend { font-size:16px; color:#D11241; }
+form ol, form ul { padding:0; }
+form li { margin:10px 0; }
+form label { font-size:14px; font-weight:bold; color:#004B8D; display:block; margin:4px; float:left; }
+form input[type=text], form select, form textarea { border:1px solid #dfdfdf; }
+
+#header { height:60px; }
+#header #app-name { 
+	height:60px; font-size:58px; letter-spacing:-6px; color:#5b8726; line-height:58px;
+	padding-left:8px; margin:0px; border-left:1px solid #fff; border-right:1px solid #fff;
+	background-color:#e1e1e1; }
+#header #app-tagline { font-size:16px; line-height:16px; letter-spacing:0px; color:#336799;}
+
+#tracer-form { height:25px; }
+#tracer-options table { font-size:16px; margin:0; color:#ffffff; padding:0; }
+#tracer-options table tr td label { font-size:16px; margin:0; color:#82A5BB; }
+#tracer-options table tr td h2 { font-weight:bold; font-size:16px; color:#336799; margin:0; }
+
+#output h2 { color:#82a5bb; border-bottom:3px solid #82a5bb;}
+
+#trace { height:500px; overflow:auto; padding: 6px; border:1px solid #6d6d6d; }
+#trace div { float:left; }
+
+.threshold { background-color:#ff0000; color:yellow; font-weight:bold; }
+.increase { color:#ff0000; }
+.decrease { color:#5b8726; }
+.stable { color:#336799; }
+.count { color:#336799; }
