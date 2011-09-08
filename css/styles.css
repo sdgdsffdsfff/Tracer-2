@@ -38,8 +38,8 @@ form input[type=text], form select, form textarea { border:1px solid #dfdfdf; }
 
 #output h2 { color:#82a5bb; border-bottom:3px solid #82a5bb;}
 
-#trace { height:500px; overflow:auto; padding: 6px; border:1px solid #6d6d6d; }
-#trace div { float:left; }
+#raw-data { padding: 6px; border:1px solid #6d6d6d; }
+#raw-data div { float:left; }
 
 .threshold { background-color:#ff0000; color:yellow; font-weight:bold; }
 .increase { color:#ff0000; }

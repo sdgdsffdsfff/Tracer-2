@@ -11,16 +11,18 @@
  * @version 0.1-alpha
  */
 class TraceFile {
-	const LVL = 0;   //> Execution level
-	const ID = 1;    //> Function ID
-	const POINT = 2; //> Entry/Exit (0 == Entry)
-	const TIME = 3;  //> Duh
-	const MEM = 4;   //> Memory Utilization at this point in the execution
-	const NAME = 5;  //> The function being executed
-	const TYPE = 6;  //> PHP Internal or user-defined function (0 == internal)
-	const INC = 7;   //> Include/Require file being loaded/referenced
-	const REF = 8;   //> The script containing the function being executed
-	const LINE = 9;  //> The line in file(REF) where the execution happens
+	const LVL = 0;          //> Execution level
+	const ID = 1;           //> Function ID
+	const POINT = 2;        //> Entry/Exit (0 == Entry)
+	const TIME = 3;         //> Duh
+	const MEM = 4;          //> Memory Utilization at this point in the execution
+	const NAME = 5;         //> The function being executed
+	const TYPE = 6;         //> PHP Internal or user-defined function (0 == internal)
+	const INC = 7;          //> Include/Require file being loaded/referenced
+	const REF = 8;          //> The script containing the function being executed
+	const LINE = 9;         //> The line in file(REF) where the execution happens
+	const VARCNT = 10;      //> The line in file(REF) where the execution happens
+	const DATA_START = 11;  //> The line in file(REF) where the execution happens
 
 	public $trace_data = array(); //> Holds instance data for the selected trace file
 
@@ -62,6 +64,8 @@ class TraceFile {
 			case 'INC' : return self::INC;
 			case 'REF' : return self::REF;
 			case 'LINE' : return self::LINE;
+			case 'VARCNT' : return self::VARCNT;
+			case 'DATA_START' : return self::DATA_START;
 			default: return 999;
 		}
 	}
@@ -145,12 +149,12 @@ class TraceFile {
 			$row_data['point'] = (int)$this->trace_data['lines'][$row][self::POINT];
 			$row_data['time'] = $this->trace_data['lines'][$row][self::TIME];
 			$row_data['time_delta'] = 0;
-			if ($row-1 > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
+			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
 				$row_data['time_delta'] = $this->time_delta($this->trace_data['lines'][$row-1][self::TIME], $this->trace_data['lines'][$row][self::TIME]);
 			}
 			$row_data['memory'] = $this->trace_data['lines'][$row][self::MEM];
 			$row_data['memory_delta'] = 0;
-			if ($row-1 > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
+			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
 				$row_data['memory_delta'] = $this->mem_delta($this->trace_data['lines'][$row-1][self::MEM], $this->trace_data['lines'][$row][self::MEM]);
 			}
 			$row_data['function'] = '';
@@ -165,21 +169,30 @@ class TraceFile {
 			if (isset($this->trace_data['lines'][$row][self::LINE])) {
 				$row_data['line'] = $this->trace_data['lines'][$row][self::LINE];
 			}
+			$row_data['vars'] = '';
+			if (isset($this->trace_data['lines'][$row][self::VARCNT]) && $this->trace_data['lines'][$row][self::VARCNT] > 0) {
+				$vars = array();
+				for ($v = 0; $v < $this->trace_data['lines'][$row][self::VARCNT]; $v++) {
+					$vars[] = $this->trace_data['lines'][$row][self::DATA_START + $v];
+				}
+				$row_data['vars'] = $vars;
+			}
 		} else {
 			// Last entry never has a level set
 			$row_data['level'] = 0;
 			$row_data['point'] = (int)$this->trace_data['lines'][$row][self::POINT];
 			$row_data['time'] = $this->trace_data['lines'][$row][self::TIME];
-			if ($row-1 > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
+			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
 				$row_data['time_delta'] = $this->time_delta($this->trace_data['lines'][$row-1][self::TIME], $this->trace_data['lines'][$row][self::TIME]);
 			}
 			$row_data['memory'] = $this->trace_data['lines'][$row][self::MEM];
-			if ($row-1 > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
+			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
 				$row_data['memory_delta'] = $this->mem_delta($this->trace_data['lines'][$row-1][self::MEM], $this->trace_data['lines'][$row][self::MEM]);
 			}
 			$row_data['function'] = 'Application Terminated';
 			$row_data['file'] = '';
 			$row_data['line'] = '';
+			$row_data['vars'] = '';
 		}
 		return $row_data;
 	}

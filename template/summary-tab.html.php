@@ -73,16 +73,18 @@
 							<?php
 							$mem_row = 0;
 							foreach ($timeline as $idx => $row){
-								$delta = $row[1] - 0;
-								if ($idx > 0) {
-									$delta = $row[1] - $timeline[$idx-1][1];
-								} 
+								if ($idx < count($timeline) - 1) {
+									$delta = $row[1] - 0;
+									if ($idx > 0) {
+										$delta = ($row[1] - $timeline[($idx-1)][1]);
+									} 
 							?>
 								mem_data.setValue(<?php echo $mem_row;?>, 0, '<?php echo $row[0]; ?>');
 								mem_data.setValue(<?php echo $mem_row;?>, 1, <?php echo $row[1]; ?>);
 								mem_data.setValue(<?php echo $mem_row;?>, 2, <?php echo $delta; ?>);
 							<?php
-								$mem_row++;
+									$mem_row++;
+								}
 							}
 							?>
 								var timeline = new google.visualization.LineChart(document.getElementById('timeline_container'));

@@ -12,17 +12,11 @@ if (isset($trace) && $trace instanceof TraceFile) {
 			</div>
 			<div class="clear"></div>
 			<div class="grid_16">
-				<div id="tabs">
-					<ul>
-						<li><a href="#overview">Trace Overview</a></li>
-						<li><a href="#raw-data">Trace File Dump</a></li>
-					</ul>
-					<div id="overview" class="grid_16 ui-tabs-hide">
+				<div id="overview">
 <?php include ('template/summary-tab.html.php'); ?>
-					</div>
-					<div id="raw-data" class="grid_16 ui-tabs-hide">
+				</div>
+				<div id="raw-data">
 <?php include ('template/dump-tab.html.php'); ?>
-					</div>
 				</div>
 			</div>
 <?php
