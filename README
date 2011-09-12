@@ -1,0 +1,28 @@
+Tracer is a web-based XDebug trace file analyzer. Currently, it provides a 
+simple interface for selecting trace files for analysis and relatively simple 
+reports as well as a complete dump of the trace file. In it's present state, it 
+is not recommended for any real 'hard' work. It is still in its infancy so user
+beware - it can make some really interesting things happen.
+
+To use:
+1. I strongly recommend creating a separate virtual host for Tracer.
+2. Use the recommended settings for xdebug in the 'xdebug-settings.txt' file.
+3. Restart apache (Duh)
+4. Put 'xdebug_start_trace()' in your PHP code where you want to start tracing.
+5. Execute your code.
+6. Load Tracer in your browser and analyze.
+
+An internet connection will be needed since Tracer currently relies on Google 
+Graphs API and some other external libraries.
+
+It has not been tested on Windows machines or Mac to my knowledge so I have no 
+idea what to expect on those platforms.
+
+This is by no means a complete and comprehensive analysis of your application, 
+but it should give you a general idea of bottlenecks in your code. Myself and 
+others will be making regular improvements to Tracer (at least until we figure 
+out which OSS license we want to use), so if you have ideas or suggestions for 
+changes or improvements, please let us know.
+
+Tracer has not yet been analyzed by itself. If your curious, knock yourself out.
+I'm waiting until it has a bit more meat on its bones. :)

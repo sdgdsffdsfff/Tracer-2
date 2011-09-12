@@ -1,15 +1,14 @@
 					<h3>Trace Data</h3>
-					<table width="100%">
+					<table style="margin:0 6px;min-width:940px;max-width:1600px;">
 						<thead>
 							<tr>
-								<th>Time</th>
-								<th>Time &#916;</th>
-								<th>Memory</th>
-								<th>Memory &#916;</th>
+								<th style="width:76px;">Time</th>
+								<th style="width:76px;">Time &#916;</th>
+								<th style="width:76px;">Memory</th>
+								<th style="width:76px;">Memory &#916;</th>
 								<th>Function</th>
 								<th>File</th>
 								<th>Line</th>
-								<th>Values</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -21,23 +20,23 @@
 							$class = (($r%2) == 0) ? 'even' : 'odd';
 							echo '<tr class="'.$class.'">';
 							$slant = ($row_data['point'] == 1) ? 'font-style:italic;' : '';
-							echo '<td style="text-align:right;">'.$row_data['time'].'</td>';
+							echo '<td style="text-align:right;width:76px;">'.$row_data['time'].'</td>';
 							if ($row_data['time_delta'] > $td_thresh) {
-								echo '<td class="threshold" style="text-align:right;">' . $row_data['time_delta'] . '</td>';
+								echo '<td class="threshold" style="text-align:right;width:76px;">' . $row_data['time_delta'] . '</td>';
 							} else {
-								echo '<td style="text-align:right;">' . $row_data['time_delta'] . '</td>';
+								echo '<td style="text-align:right;width:76px;">' . $row_data['time_delta'] . '</td>';
 							}
-							echo '<td style="text-align:right;">'.$row_data['memory'].'</td>';
+							echo '<td style="text-align:right;width:76px;">'.$row_data['memory'].'</td>';
 							if ($row_data['memory_delta'] > $md_thresh) {
-								echo '<td class="threshold" style="text-align:right;">' . $row_data['memory_delta'] . '</td>';
+								echo '<td class="threshold" style="text-align:right;width:76px;">' . $row_data['memory_delta'] . '</td>';
 							} else {
-								$class = 'stable';
+								$stat = 'stable';
 								if ($row_data['memory_delta'] > 0) {
-									$class = 'increase';
+									$stat = 'increase';
 								} else if ($row_data['memory_delta'] < 0 ) {
-									$class = 'decrease';
+									$stat = 'decrease';
 								}
-								echo '<td class="'.$class.'" style="text-align:right;">' . $row_data['memory_delta'] . '</td>';
+								echo '<td class="'.$stat.'" style="text-align:right;width:76px;">' . $row_data['memory_delta'] . '</td>';
 							}
 							
 							$function = '<div style="text-align:right;width:' . ($row_data['level'] * 10) . 'px;">';
@@ -56,13 +55,16 @@
 								$line_num = $row_data['line'];
 							}
 							echo '<td>' . $line_num . '</td>';
+							echo '</tr>';
+							echo '<tr class="'.$class.'"><td colspan="1"></td>';
 							$vars = '';
 							if (is_array($row_data['vars'])) {
 								foreach ($row_data['vars'] as $var) {
-									$vars .= $var . '<br />';
+									$vars .= htmlentities($var) . '<br />';
 								}
+								$vars = '<div class="vardump"><code>' . $vars . '</code></div>';
 							}
-							echo '<td>' . $vars . '</td>';
+							echo '<td colspan="6">' . $vars . '</td>';
 							echo '</tr>';
 						}
 						ob_end_flush();

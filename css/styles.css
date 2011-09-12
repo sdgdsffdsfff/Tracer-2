@@ -6,12 +6,11 @@ h3 { font-size:22px; margin:0; color:#5b8726;}
 h4, h5 { font-size:14px; font-weight:bold; }
 strong, b { font-weight:bold; }
 
-table { border:none; width:100%; text-align:left; border-collapse:collapse; }
+table { border:none; text-align:left; border-collapse:collapse; }
 thead { background:#cdcdcd; font-size:14px; font-weight:bold; }
 tbody { }
 th, td { padding:2px; }
 th { text-align:center; }
-th.options, td.options { width:66px; text-align:center; }
 
 .odd { background:#f0f0f0; }
 .even { background:#ffffff; }
@@ -46,3 +45,16 @@ form input[type=text], form select, form textarea { border:1px solid #dfdfdf; }
 .decrease { color:#5b8726; }
 .stable { color:#336799; }
 .count { color:#336799; }
+
+.vardump {
+	min-width:940px;
+	max-width:1024px;
+	overflow:auto;
+	padding:3px;
+	border:1px solid #cdcdcd;
+	color:#000;
+	background-color:#D8D8BF;
+}
+.vardump code {
+	width:100%;
+}
