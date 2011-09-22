@@ -11,20 +11,21 @@
  * @version 0.1-alpha
  */
 class TraceFile {
-	const LVL = 0;          //> Execution level
-	const ID = 1;           //> Function ID
-	const POINT = 2;        //> Entry/Exit (0 == Entry)
-	const TIME = 3;         //> Duh
-	const MEM = 4;          //> Memory Utilization at this point in the execution
-	const NAME = 5;         //> The function being executed
-	const TYPE = 6;         //> PHP Internal or user-defined function (0 == internal)
-	const INC = 7;          //> Include/Require file being loaded/referenced
-	const REF = 8;          //> The script containing the function being executed
-	const LINE = 9;         //> The line in file(REF) where the execution happens
-	const VARCNT = 10;      //> The line in file(REF) where the execution happens
-	const DATA_START = 11;  //> The line in file(REF) where the execution happens
+	const LVL = 0;                //> Execution level
+	const ID = 1;                 //> Function ID
+	const POINT = 2;              //> Entry/Exit (0 == Entry)
+	const TIME = 3;               //> Duh
+	const MEM = 4;                //> Memory Utilization at this point in the execution
+	const NAME = 5;               //> The function being executed
+	const TYPE = 6;               //> PHP Internal or user-defined function (0 == internal)
+	const INC = 7;                //> Include/Require file being loaded/referenced
+	const REF = 8;                //> The script containing the function being executed
+	const LINE = 9;               //> The line in file(REF) where the execution happens
+	const VARCNT = 10;            //> The line in file(REF) where the execution happens
+	const DATA_START = 11;        //> The line in file(REF) where the execution happens
 
 	public $trace_data = array(); //> Holds instance data for the selected trace file
+	public $raw = array();        //> Holds the raw data returned from the Python script that parses the trace file.
 
 	/*!
 	 * TraceFile object constructor
@@ -36,12 +37,15 @@ class TraceFile {
 	 * @return object Instance of the TraceFile object
 	 */
 	public function __construct ($trace_file) {
-		$this->trace_data = json_decode(shell_exec('./externals/trace_read.py '.$trace_file), true);
-		preg_match("/\[(.*)\]/", $this->trace_data['start'], $time);
+		$this->raw = json_decode(shell_exec('./externals/trace_read.py '.$trace_file), true);
+		preg_match("/\[(.*)\]/", $this->raw['start'], $time);
 		$this->trace_data['start'] = date('U', strtotime($time[1]));
-		preg_match("/\[(.*)\]/", $this->trace_data['end'], $time);
+		preg_match("/\[(.*)\]/", $this->raw['end'], $time);
 		$this->trace_data['end'] = date('U', strtotime($time[1]));
-		// All done.
+		$this->trace_data['peak_mem'] = 0;
+		for ($index = 0; $index < count($this->raw['lines']); $index++) {
+			$this->trace_data['lines'][] = $this->build_line_data($index);
+		}
 		return $this;
 	}
 
@@ -66,15 +70,15 @@ class TraceFile {
 			case 'LINE' : return self::LINE;
 			case 'VARCNT' : return self::VARCNT;
 			case 'DATA_START' : return self::DATA_START;
-			default: return 999;
+			default: return 999999;
 		}
 	}
 
 	public function function_types () {
 		$funcs = array_map (
 			function ($line) {
-				if ((string)$line[TraceFile::constant('POINT')] == '0') { //> Deal only with 'entry' points
-					return ((string)$line[TraceFile::constant('TYPE')] == '0') ? 'php' : 'user';
+				if ((string)$line['point'] === '0') { //> Deal only with 'entry' points
+					return ((string)$line['type'] === '0') ? 'php' : 'user';
 				}
 				return 0;
 			},
@@ -100,27 +104,14 @@ class TraceFile {
 		reset($this->trace_data['lines']);
 		end($this->trace_data['lines']);
 		$last = current($this->trace_data['lines']);
-		return $last[self::TIME];
-	}
-
-	public function total_mem () {
-		reset($this->trace_data['lines']);
-		$first = current($this->trace_data['lines']);
-		$start = $first[self::MEM]; 
-		end($this->trace_data['lines']);
-		// go back one more since the last line is the 'terminate' line
-		prev($this->trace_data['lines']);
-		$last = current($this->trace_data['lines']);
-		$end = $last[self::MEM];
-		reset($this->trace_data['lines']);
-		return $end - $start;
+		return $last['time'];
 	}
 
 	public function top_functions () {
 		$funcs = array_map (
 			function ($line) {
-				if (isset($line[TraceFile::constant('NAME')])) {
-					return $line[TraceFile::constant('NAME')];
+				if (isset($line['function']) && $line['function'] !== '') {
+					return $line['function'];
 				}
 				return 0;
 			},
@@ -135,61 +126,82 @@ class TraceFile {
 	public function timeline () {
 		$timeline = array_map (
 			function ($line) {
-				return array($line[TraceFile::constant('TIME')], $line[TraceFile::constant('MEM')]);
+				return array($line['time'], $line['memory']);
 			},
 			$this->trace_data['lines']
 		);
 		return $timeline;
 	}
 
-	public function build_row ($row) {
+	public function memory_peak ($mem, $line_num) {
+		if ($mem > $this->trace_data['peak_mem']) {
+			$this->trace_data['peak_mem'] = $mem;
+			$this->trace_data['peak_line'] = $line_num;
+		}
+	}
+
+	/*!
+	 * Parses the trace data line and returns an array of the trace data.
+	 */
+	public function build_line_data ($row) {
 		$row_data = array();
-		if (isset($this->trace_data['lines'][$row][self::LVL]) !== '' && $row >= 0) {
-			$row_data['level'] = (int)$this->trace_data['lines'][$row][self::LVL];
-			$row_data['point'] = (int)$this->trace_data['lines'][$row][self::POINT];
-			$row_data['time'] = $this->trace_data['lines'][$row][self::TIME];
+		if (isset($this->raw['lines'][$row][self::LVL]) !== '' && $row >= 0) {
+			$row_data['level'] = (int)$this->raw['lines'][$row][self::LVL];
+			$row_data['point'] = (int)$this->raw['lines'][$row][self::POINT];
+			$row_data['time'] = $this->raw['lines'][$row][self::TIME];
 			$row_data['time_delta'] = 0;
-			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
-				$row_data['time_delta'] = $this->time_delta($this->trace_data['lines'][$row-1][self::TIME], $this->trace_data['lines'][$row][self::TIME]);
+			if ($row > 0 && isset($this->raw['lines'][$row-1][self::TIME])) {
+				$row_data['time_delta'] = $this->time_delta($this->raw['lines'][$row-1][self::TIME], $this->raw['lines'][$row][self::TIME]);
 			}
-			$row_data['memory'] = $this->trace_data['lines'][$row][self::MEM];
+			$row_data['memory'] = $this->raw['lines'][$row][self::MEM];
 			$row_data['memory_delta'] = 0;
-			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
-				$row_data['memory_delta'] = $this->mem_delta($this->trace_data['lines'][$row-1][self::MEM], $this->trace_data['lines'][$row][self::MEM]);
+			if ($row > 0 && isset($this->raw['lines'][$row-1][self::MEM])) {
+				$this->memory_peak($this->raw['lines'][$row][self::MEM], $row);
+				$row_data['memory_delta'] = $this->mem_delta($this->raw['lines'][$row-1][self::MEM], $this->raw['lines'][$row][self::MEM]);
 			}
 			$row_data['function'] = '';
-			if (isset($this->trace_data['lines'][$row][self::NAME])) {
-				$row_data['function'] = $this->trace_data['lines'][$row][self::NAME];
+			if (isset($this->raw['lines'][$row][self::NAME])) {
+				$row_data['function'] = $this->raw['lines'][$row][self::NAME];
+			}
+			$row_data['type'] = '';
+			if (isset($this->raw['lines'][$row][self::TYPE])) {
+				$row_data['type'] = $this->raw['lines'][$row][self::TYPE];
+			}
+			$row_data['inc'] = '';
+			if (isset($this->raw['lines'][$row][self::INC])) {
+				$row_data['file'] = $this->raw['lines'][$row][self::INC];
 			}
 			$row_data['file'] = '';
-			if (isset($this->trace_data['lines'][$row][self::REF])) {
-				$row_data['file'] = $this->trace_data['lines'][$row][self::REF];
+			if (isset($this->raw['lines'][$row][self::REF])) {
+				$row_data['file'] = $this->raw['lines'][$row][self::REF];
 			}
 			$row_data['line'] = '';
-			if (isset($this->trace_data['lines'][$row][self::LINE])) {
-				$row_data['line'] = $this->trace_data['lines'][$row][self::LINE];
+			if (isset($this->raw['lines'][$row][self::LINE])) {
+				$row_data['line'] = $this->raw['lines'][$row][self::LINE];
 			}
 			$row_data['vars'] = '';
-			if (isset($this->trace_data['lines'][$row][self::VARCNT]) && $this->trace_data['lines'][$row][self::VARCNT] > 0) {
+			if (isset($this->raw['lines'][$row][self::VARCNT]) && $this->raw['lines'][$row][self::VARCNT] > 0) {
 				$vars = array();
-				for ($v = 0; $v < $this->trace_data['lines'][$row][self::VARCNT]; $v++) {
-					$vars[] = $this->trace_data['lines'][$row][self::DATA_START + $v];
+				for ($v = 0; $v < $this->raw['lines'][$row][self::VARCNT]; $v++) {
+					$vars[] = $this->raw['lines'][$row][self::DATA_START + $v];
 				}
 				$row_data['vars'] = $vars;
 			}
 		} else {
 			// Last entry never has a level set
 			$row_data['level'] = 0;
-			$row_data['point'] = (int)$this->trace_data['lines'][$row][self::POINT];
-			$row_data['time'] = $this->trace_data['lines'][$row][self::TIME];
-			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::TIME])) {
-				$row_data['time_delta'] = $this->time_delta($this->trace_data['lines'][$row-1][self::TIME], $this->trace_data['lines'][$row][self::TIME]);
+			$row_data['point'] = (int)$this->raw['lines'][$row][self::POINT];
+			$row_data['time'] = $this->raw['lines'][$row][self::TIME];
+			if ($row > 0 && isset($this->raw['lines'][$row-1][self::TIME])) {
+				$row_data['time_delta'] = $this->time_delta($this->raw['lines'][$row-1][self::TIME], $this->raw['lines'][$row][self::TIME]);
 			}
-			$row_data['memory'] = $this->trace_data['lines'][$row][self::MEM];
-			if ($row > 0 && isset($this->trace_data['lines'][$row-1][self::MEM])) {
-				$row_data['memory_delta'] = $this->mem_delta($this->trace_data['lines'][$row-1][self::MEM], $this->trace_data['lines'][$row][self::MEM]);
+			$row_data['memory'] = $this->raw['lines'][$row][self::MEM];
+			if ($row > 0 && isset($this->raw['lines'][$row-1][self::MEM])) {
+				$row_data['memory_delta'] = $this->mem_delta($this->raw['lines'][$row-1][self::MEM], $this->raw['lines'][$row][self::MEM]);
 			}
 			$row_data['function'] = 'Application Terminated';
+			$row_data['type'] = '';
+			$row_data['inc'] = '';
 			$row_data['file'] = '';
 			$row_data['line'] = '';
 			$row_data['vars'] = '';

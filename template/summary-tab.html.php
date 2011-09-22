@@ -3,12 +3,12 @@
 						<h3>Runtime Summary</h3>
 						<ul>
 							<li><b>Runtime:</b> <?php echo $trace->run_time(); ?> seconds</li>
-							<li><b>Total Memory Used:</b> <?php echo $trace->total_mem(); ?> bytes</li>
+							<li><b>Peak Memory:</b> <?php echo $trace->peak_mem; ?> bytes</li>
 							<li><b>Start Time:</b> <?php echo date('Y-m-d H:i:s', $trace->start); ?></li>
 							<li><b>End Time:</b> <?php echo date('Y-m-d H:i:s', $trace->end); ?></li>
 						</ul>
 					</div>
-					<div class="grid_6">
+					<div class="grid_6 alpha">
 						<h3>Functions Summary</h3>
 						<script type="text/javascript">
 							google.load("visualization", "1", {packages:["corechart"]});
@@ -23,13 +23,13 @@
 								f_summary.setValue(1, 0, 'User-Defined');
 								f_summary.setValue(1, 1, <?php echo $user_defined; ?>);
 								var fsp = new google.visualization.PieChart(document.getElementById('f_summary_pie'));
-								fsp.draw(f_summary, {width: 400, height: 200, chartArea:{ left:0, top:0, width:"100%",height:"100%"}});
+								fsp.draw(f_summary, {width: 320, height: 200, chartArea:{ left:0, top:0, width:"100%",height:"100%"}});
 							}
 						</script>
 						<div id="f_summary_pie"></div>
 					</div>
-					<div class="grid_6">
-						<h3>Most Common (Top 10) Functions</h3>
+					<div class="grid_6 alpha">
+						<h3>Top 10 Common Functions</h3>
 						<script type="text/javascript">
 							google.load("visualization", "1", {packages:["corechart"]});
 							google.setOnLoadCallback(drawTop10Functions);
@@ -49,7 +49,7 @@
 							}
 							?>
 								var t10fp = new google.visualization.PieChart(document.getElementById('top10_functions'));
-								t10fp.draw(f_top10, {width: 400, height: 200, chartArea:{ left:0, top:0, width:"100%",height:"100%"}});
+								t10fp.draw(f_top10, {width: 320, height: 200, chartArea:{ left:0, top:0, width:"100%",height:"100%"}});
 							}
 						</script>
 						<div id="top10_functions"></div>

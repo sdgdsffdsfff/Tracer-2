@@ -3,5 +3,4 @@ $(function() {
 		cache: true,
 		spinner: 'Preparing data...'
 	});
-	$('input:submit').button();
 });

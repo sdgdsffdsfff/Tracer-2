@@ -1,5 +1,37 @@
+					<script type="text/javascript">
+						function show_code(file_path, line_num) {
+							$.post(
+								"file_popper.php", 
+								{ "file": file_path, "line": line_num },
+								function(data){
+									var first = data.first;
+									var last = data.last;
+									var table = '';
+									for (var l = first; l <= last; l++) {
+										var bold = '';
+										var zebra = ((l%2) == 0) ? 'even' : 'odd';
+										if (l == line_num) {
+											bold = ' style="font-weight:bold; font-style:italic;"';
+										}
+										var content = $("<div/>").html(data[l]).html();
+										table += '<tr class="'+zebra+'"><td'+bold+'>'+l+':</td><td'+bold+'>'+content+'</td></tr>';
+									}
+									$('#popper_rows').html(table);
+									$('#popper').dialog({ 
+										modal: true,
+										width: 960
+									});
+								},
+								"json"
+							);
+						}
+					</script>
+					<div id="popper" title="Code" style="display:none;">
+						<table id="popper_rows" style="width:934px;">
+						</table>
+					</div>
 					<h3>Trace Data</h3>
-					<table style="margin:0 6px;min-width:940px;max-width:1600px;">
+					<table style="width:926px;">
 						<thead>
 							<tr>
 								<th style="width:76px;">Time</th>
@@ -7,65 +39,63 @@
 								<th style="width:76px;">Memory</th>
 								<th style="width:76px;">Memory &#916;</th>
 								<th>Function</th>
-								<th>File</th>
-								<th>Line</th>
+							</tr>
+							<tr>
+								<th colspan="5" style="text-align:right;">Reference File and Line #</th>
+							</tr>
+							<tr>
+								<th colspan="5" style="text-align:left;">Function Data</th>
 							</tr>
 						</thead>
 						<tbody>
 						<?php 
 						ob_start();
-						for ($r = 0; $r < count($trace->lines); $r++) {
-							$row_data = $trace->build_row($r);
-							// build our table row
+						foreach ($trace->lines as $r => $row_data) {
 							$class = (($r%2) == 0) ? 'even' : 'odd';
-							echo '<tr class="'.$class.'">';
 							$slant = ($row_data['point'] == 1) ? 'font-style:italic;' : '';
-							echo '<td style="text-align:right;width:76px;">'.$row_data['time'].'</td>';
-							if ($row_data['time_delta'] > $td_thresh) {
-								echo '<td class="threshold" style="text-align:right;width:76px;">' . $row_data['time_delta'] . '</td>';
-							} else {
-								echo '<td style="text-align:right;width:76px;">' . $row_data['time_delta'] . '</td>';
-							}
-							echo '<td style="text-align:right;width:76px;">'.$row_data['memory'].'</td>';
-							if ($row_data['memory_delta'] > $md_thresh) {
-								echo '<td class="threshold" style="text-align:right;width:76px;">' . $row_data['memory_delta'] . '</td>';
-							} else {
-								$stat = 'stable';
+							$time_delta_class = ($row_data['time_delta'] > $td_thresh) ? ' class="threshold"' : '';
+							$mem_delta_class = ($row_data['memory_delta'] > $md_thresh) ? ' class="threshold' : '';
+							if ($mem_delta_class === '') {
+								$mem_delta_class = ' class="stable"';
 								if ($row_data['memory_delta'] > 0) {
-									$stat = 'increase';
+									$mem_delta_class = ' class="increase"';
 								} else if ($row_data['memory_delta'] < 0 ) {
-									$stat = 'decrease';
+									$mem_delta_class = ' class="decrease"';
 								}
-								echo '<td class="'.$stat.'" style="text-align:right;width:76px;">' . $row_data['memory_delta'] . '</td>';
 							}
-							
-							$function = '<div style="text-align:right;width:' . ($row_data['level'] * 10) . 'px;">';
-							$function .= ($row_data['point'] == 0) ? '&raquo; </div> ' : '&laquo; </div> ';
+							$function = '<div style="text-align:right;width:' . ($row_data['level'] * 12) . 'px;">';
+							$function .= ($row_data['point'] === 0) ? '&raquo; </div> ' : '&laquo; </div> ';
 							if (isset($row_data['function'])) {
 								$function .= '<div style="font-weight:bold;'.$slant.'">' . $row_data['function'] . '</div>';
 							}
-							echo '<td>' . $function . '</td>';
-							$file = '';
-							if (isset($row_data['file'])) {
-								$file = $row_data['file'];
+							$line = ($row_data['line'] !== '') ? ' on Line #' . $row_data['line'] : '';
+							$code_line = '';
+							if ($row_data['line'] !== '' && $row_data['file'] !== '') {
+								$code_line = '<a href="javascript:show_code(\'' . $row_data['file'].'\', ' . $row_data['line'] . ');">' . $row_data['file'] . $line . '</a>';
 							}
-							echo '<td>' . $file . '</td>';
-							$line_num = '';
-							if (isset($row_data['line'])) {
-								$line_num = $row_data['line'];
-							}
-							echo '<td>' . $line_num . '</td>';
-							echo '</tr>';
-							echo '<tr class="'.$class.'"><td colspan="1"></td>';
 							$vars = '';
 							if (is_array($row_data['vars'])) {
 								foreach ($row_data['vars'] as $var) {
-									$vars .= htmlentities($var) . '<br />';
+									$vars .= highlight_string($var, true) . '<br />';
 								}
-								$vars = '<div class="vardump"><code>' . $vars . '</code></div>';
+								$vars = '<div class="vardump">' . $vars . '</div>';
 							}
-							echo '<td colspan="6">' . $vars . '</td>';
-							echo '</tr>';
+							$data = <<<EOD
+							<tr class="{$class}">
+								<td style="text-align:right;width:76px;">{$row_data['time']}</td>
+								<td{$time_delta_class} style="text-align:right;width:76px;">{$row_data['time_delta']}</td>
+								<td style="text-align:right;width:76px;">{$row_data['memory']}</td>
+								<td{$mem_delta_class} style="text-align:right;width:76px;">{$row_data['memory_delta']}</td>
+								<td>{$function}</td>
+							</tr>
+							<tr class="{$class}">
+								<td colspan="5" style="text-align:right;">{$code_line}</td>
+							</tr>
+							<tr class="{$class}">
+								<td colspan="5">{$vars}</td>
+							</tr>
+EOD;
+							echo $data;
 						}
 						ob_end_flush();
 						?>

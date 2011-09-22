@@ -31,24 +31,23 @@ form input[type=text], form select, form textarea { border:1px solid #dfdfdf; }
 #header #app-tagline { font-size:16px; line-height:16px; letter-spacing:0px; color:#336799;}
 
 #tracer-form { height:25px; }
-#tracer-options table { font-size:16px; margin:0; color:#ffffff; padding:0; }
-#tracer-options table tr td label { font-size:16px; margin:0; color:#82A5BB; }
-#tracer-options table tr td h2 { font-weight:bold; font-size:16px; color:#336799; margin:0; }
+#tracer-options table { font-size:12px; margin:0; color:#ffffff; padding:0; }
+#tracer-options table tr td label { font-size:12px; margin:0; color:#82A5BB; }
+#tracer-options table tr td h2 { font-weight:bold; font-size:14px; color:#336799; margin:0; }
 
 #output h2 { color:#82a5bb; border-bottom:3px solid #82a5bb;}
 
 #raw-data { padding: 6px; border:1px solid #6d6d6d; }
 #raw-data div { float:left; }
 
-.threshold { background-color:#ff0000; color:yellow; font-weight:bold; }
+.threshold { background-color:#ff0000; color:yellow; font-weight:bold; text-align:center; }
 .increase { color:#ff0000; }
 .decrease { color:#5b8726; }
 .stable { color:#336799; }
 .count { color:#336799; }
 
 .vardump {
-	min-width:940px;
-	max-width:1024px;
+	width:910px;
 	overflow:auto;
 	padding:3px;
 	border:1px solid #cdcdcd;
